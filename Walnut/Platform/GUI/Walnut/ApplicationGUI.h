@@ -16,6 +16,8 @@
 
 #include "vulkan/vulkan.h"
 
+#include "include/bin2header.h"
+
 void check_vk_result(VkResult err);
 
 struct GLFWwindow;
@@ -44,6 +46,29 @@ namespace Walnut {
 		// of primary monitor
 		bool CenterWindow = false;
 	};
+
+	// TODO: Probably should move this
+	enum class FontRanges {
+		DEFAULT = 1 << 0,
+		CYRILLIC = 1 << 1,
+		CHINESE_SIMPLIFIED = 1 << 2,
+		CHINESE_FULL = 1 << 3,
+		JAPANESE = 1 << 4,
+		KOREAN = 1 << 5,
+		THAI = 1 << 6,
+		VIETNAMESE = 1 << 7,
+		GEORGIAN = 1 << 8
+	};
+
+	inline FontRanges operator|(FontRanges a, FontRanges b) {
+		return static_cast<FontRanges>(
+			static_cast<int>(a) | static_cast<int>(b));
+	}
+
+	inline FontRanges operator&(FontRanges lhs, FontRanges rhs) {
+		return static_cast<FontRanges>(
+			static_cast<int>(lhs) & static_cast<int>(rhs));
+	}
 
 	class Application
 	{
@@ -86,6 +111,9 @@ namespace Walnut {
 		static void SubmitResourceFree(std::function<void()>&& func);
 
 		static ImFont* GetFont(const std::string& name);
+		static bool AddFont(std::filesystem::path& filePath);
+		static ImFont* LoadFont(const std::filesystem::path& filePath, FontRanges fontRanges=FontRanges::DEFAULT);
+		static void SelectFont(const std::string& name);
 
 		template<typename Func>
 		void QueueEvent(Func&& func)
@@ -102,6 +130,8 @@ namespace Walnut {
 		// For custom titlebars
 		void UI_DrawTitlebar(float& outTitlebarHeight);
 		void UI_DrawMenubar();
+	public:
+		static std::unordered_map<std::string, ImFont*> s_Fonts;
 	private:
 		ApplicationSpecification m_Specification;
 		GLFWwindow* m_WindowHandle = nullptr;

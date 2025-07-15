@@ -11,6 +11,8 @@ project "WalnutApp"
    {
       "../vendor/imgui",
       "../vendor/glfw/include",
+      "../vendor/static-bin2header/src",
+      "../vendor/yaml-cpp/include",
 
       "../Walnut/Source",
       "../Walnut/Platform/GUI",

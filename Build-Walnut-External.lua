@@ -17,6 +17,8 @@ group "Dependencies"
    include "vendor/imgui"
    include "vendor/glfw"
    include "vendor/yaml-cpp"
+   include "vendor/static-bin2header/src/Build-Bin2Header.lua"
+   include "vendor/nativefiledialog/build/Build-nfd-Only.lua"
 group ""
 
 group "Core"

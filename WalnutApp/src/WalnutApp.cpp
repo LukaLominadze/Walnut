@@ -76,6 +76,21 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 			ImGui::EndMenu();
 		}
 
+		if (ImGui::BeginMenu("Font")) {
+			if (ImGui::MenuItem("Add")) {
+				std::filesystem::path fontPath = Walnut::UI::OpenFileDialog("ttf");
+				if (!fontPath.empty()) {
+					Walnut::Application::Get().AddFont(fontPath);
+				}
+			}
+			for (const auto& [name, data] : Walnut::Application::s_Fonts) {
+				if (ImGui::MenuItem(name.c_str())) {
+					Walnut::Application::Get().SelectFont(name);
+				}
+			}
+			ImGui::EndMenu();
+		}
+
 		if (ImGui::BeginMenu("Help"))
 		{
 			if (ImGui::MenuItem("About"))

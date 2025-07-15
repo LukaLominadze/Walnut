@@ -22,6 +22,9 @@ project "Walnut"
       "../vendor/imgui",
       "../vendor/glfw/include",
       "../vendor/stb_image",
+      "../vendor/static-bin2header/src",
+      "../vendor/yaml-cpp/include",
+      "../vendor/nativefiledialog/src/include",
 
       "%{IncludeDir.VulkanSDK}",
       "%{IncludeDir.glm}",
@@ -32,9 +35,18 @@ project "Walnut"
    {
        "ImGui",
        "GLFW",
+       "Bin2Header",
 
        "%{Library.Vulkan}",
+
+       "yaml-cpp",
+       "nfd"
    }
+
+   defines
+	{
+		"YAML_CPP_STATIC_DEFINE"
+	}
 
    targetdir ("../../bin/" .. outputdir .. "/%{prj.name}")
    objdir ("../../bin-int/" .. outputdir .. "/%{prj.name}")

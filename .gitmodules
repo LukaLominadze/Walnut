@@ -24,3 +24,9 @@
 [submodule "Walnut-Modules/Walnut-Networking"]
 	path = Walnut-Modules/Walnut-Networking
 	url = https://github.com/StudioCherno/Walnut-Networking
+[submodule "vendor/static-bin2header"]
+	path = vendor/static-bin2header
+	url = https://github.com/LukaLominadze/static-bin2header
+[submodule "vendor/nativefiledialog"]
+	path = vendor/nativefiledialog
+	url = https://github.com/LukaLominadze/nativefiledialog

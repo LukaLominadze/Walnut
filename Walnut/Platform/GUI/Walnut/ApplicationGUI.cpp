@@ -2,6 +2,7 @@
 
 #include "Walnut/UI/UI.h"
 #include "Walnut/Core/Log.h"
+#include "Walnut/Utils/StringUtils.h"
 
 //
 // Adapted from Dear ImGui Vulkan example
@@ -19,6 +20,7 @@
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.h>
 #include <glm/glm.hpp>
+#include <yaml-cpp/yaml.h>
 
 #include "ImGui/ImGuiTheme.h"
 
@@ -69,7 +71,11 @@ static VkCommandBuffer s_ActiveCommandBuffer = nullptr;
 // and is always guaranteed to increase (eg. 0, 1, 2, 0, 1, 2)
 static uint32_t s_CurrentFrameIndex = 0;
 
-static std::unordered_map<std::string, ImFont*> s_Fonts;
+static std::map<std::string, std::vector<uint8_t>> s_FontDatas;
+std::unordered_map<std::string, ImFont*> Walnut::Application::s_Fonts;
+static std::map<std::string, ImVector<ImWchar>> s_FontRanges;
+
+constexpr static const char* s_FontPath = "res/fonts/";
 
 static Walnut::Application* s_Instance = nullptr;
 
@@ -573,6 +579,14 @@ namespace Walnut {
 		s_Fonts["Bold"] = io.Fonts->AddFontFromMemoryTTF((void*)g_RobotoBold, sizeof(g_RobotoBold), 20.0f, &fontConfig);
 		s_Fonts["Italic"] = io.Fonts->AddFontFromMemoryTTF((void*)g_RobotoItalic, sizeof(g_RobotoItalic), 20.0f, &fontConfig);
 		io.FontDefault = robotoFont;
+		for (const auto& entry : std::filesystem::directory_iterator(s_FontPath)) {
+			std::string ext = Walnut::Utils::SplitString(entry.path().string(), ".")[1];
+			if (ext == "yaml") {
+				// TODO: Preferred languages should be chosen by user and saved locally
+				FontRanges fontRanges = FontRanges::DEFAULT | FontRanges::CYRILLIC | FontRanges::GEORGIAN;
+				LoadFont(entry.path(), fontRanges);
+			}
+		}
 
 		// Upload Fonts
 		{
@@ -1116,6 +1130,172 @@ namespace Walnut {
 			return nullptr;
 
 		return s_Fonts.at(name);
+	}
+
+	void Application::SelectFont(const std::string& name)
+	{
+		if (!s_Fonts.contains(name)) {
+			return;
+		}
+		ImGuiIO& io = ImGui::GetIO();
+		io.FontDefault = s_Fonts[name];
+	}
+
+	bool Application::AddFont(std::filesystem::path& filePath)
+	{
+		auto tokens = Walnut::Utils::SplitString(filePath.string(), "/");
+		if (tokens.size() == 1) {
+			tokens = Walnut::Utils::SplitString(filePath.string(), "\\");
+		}
+		std::string directory = "";
+		for (size_t i = 0; i < tokens.size() - 1; i++) {
+			directory += (tokens[i] + "/");
+		}
+		std::string fileName = tokens.at(tokens.size() - 1);
+
+		tokens = Walnut::Utils::SplitString(fileName, ".");
+		std::string fileNameBase = tokens.at(0);
+
+		// name filter from bin2header
+		std::string hname = fileNameBase;
+		char badchars[6] = { '\\', '+', '-', '*', ' ' };
+		for (int current = 0; current < hname.length(); current++) {
+			for (int x = 0; x < len(badchars); x++) {
+				if ((hname[current] == badchars[x]) || (hname[current] == '.'))
+					hname.replace(current, 1, "_");
+			}
+		}
+		for (int current = 0; current < fileNameBase.length(); current++) {
+			for (int x = 0; x < len(badchars); x++) {
+				if (fileNameBase[current] == badchars[x])
+					fileNameBase.replace(current, 1, "_");
+			}
+		}
+
+		if (s_Fonts.contains(fileNameBase)) {
+			return false;
+		}
+
+		std::string outEmbed = fileNameBase + ".embed";
+		std::string outYaml = fileNameBase + ".yaml";
+
+		Convert(filePath, s_FontPath + outEmbed);
+
+		ifstream file(s_FontPath + outEmbed);
+		if (!file) {
+			std::cout << "Failed to open file: " + outEmbed << std::endl;
+			return false;
+		}
+
+		std::string content((std::istreambuf_iterator<char>(file)),
+			std::istreambuf_iterator<char>());
+
+		std::string yaml_output = cppToYamlBinary(content, fileNameBase);
+
+		{
+			std::ofstream fout(s_FontPath + outYaml);
+			fout << yaml_output.c_str();
+		}
+
+		return true;
+	}
+
+	ImFont* Application::LoadFont(const std::filesystem::path& filePath, FontRanges fontRanges)
+	{
+		auto tokens = Walnut::Utils::SplitString(filePath.string(), "/");
+		if (tokens.size() == 1) {
+			tokens = Walnut::Utils::SplitString(filePath.string(), "\\");
+		}
+		std::string directory = "";
+		for (size_t i = 0; i < tokens.size() - 1; i++) {
+			directory += (tokens[i] + "/");
+		}
+		std::string fileName = tokens.at(tokens.size() - 1);
+
+		tokens = Walnut::Utils::SplitString(fileName, ".");
+		std::string fileNameBase = tokens.at(0);
+
+		if (!std::filesystem::exists(filePath)) {
+			return nullptr;
+		}
+
+		YAML::Node root = YAML::LoadFile(directory + fileName);
+
+		if (!root[fileNameBase]) {
+			std::cout << "Variable not found in YAML: " + fileNameBase << std::endl;
+			return nullptr;
+		}
+
+		std::vector<uint8_t> fontData;
+
+		for (const auto& lineNode : root[fileNameBase]) {
+			std::string line = lineNode.as<std::string>();  // lineNode is a scalar like "0x00, 0x01, 0x02"
+
+			// Parse each hex byte from the line string
+			std::stringstream ss(line);
+			std::string byteStr;
+			while (std::getline(ss, byteStr, ',')) {
+				// Remove leading/trailing whitespace
+				byteStr.erase(0, byteStr.find_first_not_of(" \t\n\r"));
+				byteStr.erase(byteStr.find_last_not_of(" \t\n\r") + 1);
+
+				// Convert hex string (like "0x01") to uint8_t
+				uint8_t byte = static_cast<uint8_t>(std::stoi(byteStr, nullptr, 16));
+				fontData.push_back(byte);
+			}
+		}
+
+		s_FontDatas[fileNameBase] = fontData;
+
+		ImGuiIO& io = ImGui::GetIO();
+
+		// Load default font
+		ImFontConfig fontConfig;
+		fontConfig.FontDataOwnedByAtlas = false;
+
+		ImFontGlyphRangesBuilder builder;
+		if ((fontRanges & FontRanges::DEFAULT) == FontRanges::DEFAULT) {
+			builder.AddRanges(io.Fonts->GetGlyphRangesDefault());
+		}
+		if ((fontRanges & FontRanges::CYRILLIC) == FontRanges::CYRILLIC) {
+			builder.AddRanges(io.Fonts->GetGlyphRangesCyrillic());
+		}
+		if ((fontRanges & FontRanges::CHINESE_SIMPLIFIED) == FontRanges::CHINESE_SIMPLIFIED) {
+			builder.AddRanges(io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
+		}
+		if ((fontRanges & FontRanges::CHINESE_FULL) == FontRanges::CHINESE_FULL) {
+			builder.AddRanges(io.Fonts->GetGlyphRangesChineseFull());
+		}
+		if ((fontRanges & FontRanges::JAPANESE) == FontRanges::JAPANESE) {
+			builder.AddRanges(io.Fonts->GetGlyphRangesJapanese());
+		}
+		if ((fontRanges & FontRanges::KOREAN) == FontRanges::KOREAN) {
+			builder.AddRanges(io.Fonts->GetGlyphRangesKorean());
+		}
+		if ((fontRanges & FontRanges::THAI) == FontRanges::THAI) {
+			builder.AddRanges(io.Fonts->GetGlyphRangesThai());
+		}
+		if ((fontRanges & FontRanges::VIETNAMESE) == FontRanges::VIETNAMESE) {
+			builder.AddRanges(io.Fonts->GetGlyphRangesVietnamese());
+		}
+		if ((fontRanges & FontRanges::GEORGIAN) == FontRanges::GEORGIAN) {
+			constexpr static const ImWchar georgian_extended_range[] = {
+			0x10A0, 0x10FF, // Georgian
+			0x2D00, 0x2D2F, // Georgian Supplement (including U+2D2F)
+			0
+			};
+			builder.AddRanges(georgian_extended_range);
+		}
+
+		builder.BuildRanges(&s_FontRanges[fileNameBase]);
+
+		ImFont* font = io.Fonts->AddFontFromMemoryTTF((void*)s_FontDatas[fileNameBase].data(),
+													  s_FontDatas[fileNameBase].size(),
+													  20.0f, &fontConfig,
+													  s_FontRanges[fileNameBase].Data);
+		s_Fonts[fileNameBase] = font;
+
+		return font;
 	}
 
 	ImGui_ImplVulkanH_Window* Application::GetMainWindowData()
