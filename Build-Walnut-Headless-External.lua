@@ -3,10 +3,10 @@
 IncludeDir = {}
 IncludeDir["glm"] = "../vendor/glm"
 IncludeDir["spdlog"] = "../vendor/spdlog/include"
+IncludeDir["nfd"] = "../vendor/nativefiledialogue/build/Build-nfd-Only.lua"
 
 group "Dependencies"
    include "vendor/yaml-cpp"
-   include "vendor/nativefiledialogue/build/Build-nfd-Only.lua"
 group ""
 
 group "Core"
