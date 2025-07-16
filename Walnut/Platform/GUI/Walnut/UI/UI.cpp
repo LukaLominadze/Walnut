@@ -554,39 +554,6 @@ namespace Walnut::UI {
 		return ImGui::Button(label);
 	}
 
-
-	std::filesystem::path OpenFileDialog(const char* filterList, const char* defaultPath)
-	{
-		nfdchar_t* outPath = NULL;
-		nfdresult_t result = NFD_OpenDialog(filterList, defaultPath, &outPath);
-		if (result == NFD_OKAY)
-		{
-			std::filesystem::path result(outPath);
-			auto tokens = Walnut::Utils::SplitString(result.string(), "/");
-			auto fileTokens = Walnut::Utils::SplitString(tokens.at(tokens.size() - 1), ".");
-			if (fileTokens.size() < 2) {
-				return std::filesystem::path{};
-			}
-			auto filterTokens = Walnut::Utils::SplitString(filterList, ";");
-			for (auto filter : filterTokens) {
-				if (fileTokens[1] != filter) {
-					return std::filesystem::path{};
-				}
-			}
-			free(outPath);
-			return result;
-		}
-		else if (result == NFD_CANCEL)
-		{
-			return std::filesystem::path{};
-		}
-		else
-		{
-			return std::filesystem::path{};
-		}
-		return std::string();
-	}
-
 	void DrawBorder(ImRect rect, float thickness, float rounding, float offsetX, float offsetY)
 	{
 		auto min = rect.Min;

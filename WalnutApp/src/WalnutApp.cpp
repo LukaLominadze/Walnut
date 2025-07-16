@@ -3,6 +3,7 @@
 
 #include "Walnut/Image.h"
 #include "Walnut/UI/UI.h"
+#include "Walnut/Utils/FileDialogueUtils.h"
 
 class ExampleLayer : public Walnut::Layer
 {
@@ -78,7 +79,7 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 
 		if (ImGui::BeginMenu("Font")) {
 			if (ImGui::MenuItem("Add")) {
-				std::filesystem::path fontPath = Walnut::UI::OpenFileDialog("ttf");
+				std::filesystem::path fontPath = Walnut::Utils::OpenFileDialog("ttf");
 				if (!fontPath.empty()) {
 					Walnut::Application::Get().AddFont(fontPath);
 				}

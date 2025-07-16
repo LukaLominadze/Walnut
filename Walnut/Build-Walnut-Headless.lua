@@ -18,6 +18,7 @@ project "Walnut-Headless"
    {
       "Source",
       "Platform/Headless",
+      "../vendor/nativefiledialog/src/include",
 
       "%{IncludeDir.glm}",
       "%{IncludeDir.spdlog}",
@@ -25,6 +26,7 @@ project "Walnut-Headless"
 
    links
    {
+      "nfd"
    }
 
    defines { "WL_HEADLESS" }

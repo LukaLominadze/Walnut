@@ -6,6 +6,7 @@ IncludeDir["spdlog"] = "../vendor/spdlog/include"
 
 group "Dependencies"
    include "vendor/yaml-cpp"
+   include "vendor/nativefiledialogue/build/Build-nfd-Only.lua"
 group ""
 
 group "Core"

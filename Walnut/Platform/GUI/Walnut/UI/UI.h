@@ -50,7 +50,6 @@ namespace Walnut::UI {
 	void EndMenubar();
 
 	bool ButtonCentered(const char* label, const ImVec2& size = ImVec2(0, 0));
-	std::filesystem::path OpenFileDialog(const char* filterList, const char* defaultPath = NULL);
 
 	// Utilities
 	class ScopedStyle
