@@ -8,6 +8,8 @@ project "Walnut-Headless"
    files
    {
        "Source/**.h",
+       "Soruce/Walnut/Utils/json.hpp",
+       "Soruce/Walnut/Utils/json_fwd.hpp",
        "Source/**.cpp",
 
        "Platform/Headless/**.h",

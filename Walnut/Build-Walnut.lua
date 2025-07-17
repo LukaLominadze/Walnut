@@ -8,6 +8,8 @@ project "Walnut"
    files
    {
        "Source/**.h",
+       "Source/Walnut/Utils/json.hpp",
+       "Source/Walnut/Utils/json_fwd.hpp",
        "Source/**.cpp",
 
        "Platform/GUI/**.h",
