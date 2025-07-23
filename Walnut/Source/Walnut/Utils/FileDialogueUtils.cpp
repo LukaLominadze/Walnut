@@ -21,12 +21,12 @@ std::filesystem::path Walnut::Utils::OpenFileDialog(const char* filterList, cons
 		}
 		auto filterTokens = Walnut::Utils::SplitString(filterList, ";");
 		for (auto filter : filterTokens) {
-			if (fileTokens[1] != filter) {
-				return std::filesystem::path{};
+			if (fileTokens[1] == filter) {
+				free(outPath);
+				return result;
 			}
 		}
-		free(outPath);
-		return result;
+		return std::filesystem::path{};
 	}
 	else if (result == NFD_CANCEL)
 	{
