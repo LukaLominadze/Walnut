@@ -50,8 +50,8 @@ project "Walnut"
 		"YAML_CPP_STATIC_DEFINE"
 	}
 
-   targetdir ("../../bin/" .. outputdir .. "/%{prj.name}")
-   objdir ("../../bin-int/" .. outputdir .. "/%{prj.name}")
+   targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
+   objdir ("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")
 
    filter "system:windows"
       systemversion "latest"
