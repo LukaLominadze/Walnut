@@ -8,8 +8,8 @@ project "Walnut-Headless"
    files
    {
        "Source/**.h",
-       "Soruce/Walnut/Utils/json.hpp",
-       "Soruce/Walnut/Utils/json_fwd.hpp",
+       "Source/Walnut/Utils/json.hpp",
+       "Source/Walnut/Utils/json_fwd.hpp",
        "Source/**.cpp",
 
        "Platform/Headless/**.h",
@@ -33,8 +33,8 @@ project "Walnut-Headless"
 
    defines { "WL_HEADLESS" }
 
-   targetdir ("../bin/" .. outputdir .. "/%{prj.name}")
-   objdir ("../bin-int/" .. outputdir .. "/%{prj.name}")
+   targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
+   objdir ("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")
 
    filter "system:windows"
       systemversion "latest"
